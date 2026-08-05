@@ -1,16 +1,62 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Mail, Lock, User } from "lucide-react"
+import { Mail, Lock, User, Loader2, AlertCircle } from "lucide-react"
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+
+    if (!email || !password) {
+      setError("请输入邮箱和密码")
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError("两次输入的密码不一致")
+      return
+    }
+
+    if (password.length < 8) {
+      setError("密码至少 8 位")
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || "注册失败")
+        return
+      }
+
+      router.push("/dashboard")
+      router.refresh()
+    } catch {
+      setError("网络错误，请稍后重试")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-md">
@@ -20,7 +66,7 @@ export default function RegisterPage() {
           <CardDescription>创建你的 IELTS 备考助手账号</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">用户名</label>
               <div className="relative">
@@ -45,6 +91,7 @@ export default function RegisterPage() {
                   className="pl-10"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -59,6 +106,7 @@ export default function RegisterPage() {
                   className="pl-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -73,11 +121,22 @@ export default function RegisterPage() {
                   className="pl-10"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
                 />
               </div>
             </div>
 
-            <Button className="w-full">注册</Button>
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {error}
+              </div>
+            )}
+
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              注册
+            </Button>
 
             <div className="text-center text-sm">
               <span className="text-muted-foreground">已有账号？</span>{" "}
@@ -85,7 +144,7 @@ export default function RegisterPage() {
                 登录
               </a>
             </div>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>

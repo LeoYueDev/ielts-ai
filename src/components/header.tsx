@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { AuthNav } from "@/components/auth-nav"
 import { BookOpen, Headphones, PenTool, MessageSquare, BarChart3, Settings, Home } from "lucide-react"
 
 const navigation = [
@@ -55,9 +56,7 @@ export function Header() {
                 <Settings className="h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/login">
-              <Button variant="outline">登录</Button>
-            </Link>
+            <AuthNav />
           </nav>
         </div>
       </div>
